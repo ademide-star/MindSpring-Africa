@@ -3,15 +3,36 @@
 
 🧠 MindSpring Africa
 
-An African Digital Brain Health Initiative
-
-Empowering individuals, families, and communities through dementia awareness, cognitive engagement, and healthy ageing.
 Play • Learn • Remember • Protect Your Brain
 
-A gamified brain health and dementia awareness platform designed to improve cognitive engagement, promote healthy lifestyles, and empower caregivers through interactive digital experiences.
+An African Digital Brain Health Initiative
 
-[ Brain Health ]
-[ Dementia Awareness ]
-[ Cognitive Games ]
-[ AI Brain Companion ]
-[ Caregiver Support ]
+-------------------------------------------------
+
+📱 About
+
+🎯 Objectives
+
+✨ Features
+
+📸 Screenshots
+
+🏗 System Architecture
+
+📊 Pilot Study
+
+🚀 Installation
+
+📂 Project Structure
+
+🛣 Roadmap
+
+🤝 Contributing
+
+📜 License
+
+👩‍🔬 Project Lead
+
+👨‍🏫 Mentor
+
+🙏 Acknowledgements
