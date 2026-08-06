@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="theme-color" content="#0D6E6E"/>
-<title>MindSpring Africa – Brain Health App</title>
+<title>MindSpring – Brain Health App</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   :root{
@@ -340,6 +340,38 @@
   .passport-log-input{flex:1;border:1.5px solid var(--mist);border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;box-sizing:border-box;width:0;}
   .passport-log-btn{background:var(--teal);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:700;cursor:pointer;flex-shrink:0;}
   .passport-toggle{font-size:11.5px;color:var(--teal);font-weight:700;cursor:pointer;text-align:right;}
+
+  /* ─── ADMIN PORTAL ─── */
+  .admin-body{padding:16px;}
+  .admin-pin-input{
+    width:100%; border:1.5px solid var(--mist); border-radius:10px; padding:12px 14px;
+    font-size:20px; letter-spacing:6px; text-align:center; font-family:inherit; box-sizing:border-box;
+  }
+  .admin-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;}
+  .phase-pill{
+    display:inline-flex; border-radius:20px; background:var(--mist); padding:3px; gap:2px;
+  }
+  .phase-btn{
+    border:none; background:transparent; padding:8px 18px; border-radius:18px; font-size:12.5px;
+    font-weight:700; color:var(--slate); cursor:pointer; font-family:inherit;
+  }
+  .phase-btn.active{background:var(--teal); color:#fff;}
+  .log-table{width:100%; border-collapse:collapse; font-size:11.5px;}
+  .log-table th{background:var(--teal-dark, var(--teal)); color:#fff; padding:7px 6px; text-align:left; font-size:10.5px;}
+  .log-table td{padding:6px; border-bottom:1px solid var(--mist); color:var(--ink);}
+  .log-table tr:nth-child(even) td{background:#F4F8F7;}
+  .admin-stat-row{display:flex;gap:10px;margin-bottom:14px;}
+  .admin-stat{flex:1;text-align:center;background:var(--mist);border-radius:10px;padding:10px 4px;}
+  .admin-stat-val{font-size:17px;font-weight:800;color:var(--teal);}
+  .admin-stat-lbl{font-size:9px;color:var(--slate);}
+  .capture-prompt{
+    margin-top:14px; padding:14px; border-radius:12px; background:var(--teal-bg);
+    border:1.5px solid var(--teal);
+  }
+  .capture-input{
+    width:100%; border:1.5px solid var(--mist); border-radius:8px; padding:10px 12px;
+    font-size:14px; font-family:inherit; box-sizing:border-box; margin:8px 0;
+  }
 </style>
 </head>
 <body>
@@ -365,6 +397,20 @@
       <div style="font-weight:800;font-size:16px;color:var(--ink);text-align:center;margin-bottom:10px;">Before you begin</div>
       <div style="font-size:13.5px;color:var(--slate);line-height:1.7;text-align:center;margin-bottom:18px;">MindSpring is an educational and cognitive engagement tool. It does not diagnose dementia or replace professional medical assessment. Users with concerning symptoms are advised to seek evaluation from a qualified healthcare professional.</div>
       <button class="btn full" onclick="ackDisclaimer()">I Understand</button>
+    </div>
+  </div>
+
+  <!-- Admin PIN modal -->
+  <div id="adminPinModal" class="disclaimer-modal" style="display:none;">
+    <div class="disclaimer-card">
+      <div style="font-size:34px;text-align:center;margin-bottom:6px;">🔐</div>
+      <div style="font-weight:800;font-size:16px;color:var(--ink);text-align:center;margin-bottom:14px;">Admin Access</div>
+      <input type="password" inputmode="numeric" id="adminPinInput" class="admin-pin-input" placeholder="••••" maxlength="8" />
+      <div id="adminPinError" style="color:var(--red);font-size:12px;text-align:center;margin-top:8px;display:none;">Incorrect PIN</div>
+      <div style="display:flex;gap:8px;margin-top:16px;">
+        <button class="btn outline" style="flex:1;" onclick="closeAdminPin()">Cancel</button>
+        <button class="btn" style="flex:1;" onclick="submitAdminPin()">Unlock</button>
+      </div>
     </div>
   </div>
 
@@ -420,7 +466,45 @@ let state = {
   sessionStart: Date.now(),
   disclaimerAcked: false,
   passport: { bp:[], glucose:[], sleep:[], activity:[], water:[], weight:[] },
+
+  // ── Admin / live-event data capture ──────────────────────────
+  sessionCaptureMode: false,
+  capturePhase: 'pre',           // 'pre' | 'post'
+  participantLog: [],            // {code, phase, score, maxScore, ts, deviceSessionId, synced}
+  adminPin: '1234',
+  supabaseUrl: 'https://xxyncvigdhegrqekyfee.supabase.co',
+  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4eW5jdmlnZGhlZ3JxZWt5ZmVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTU2OTIsImV4cCI6MjEwMTU5MTY5Mn0.x1BgyfSUa5ZsTnp0uZcXHKvnu51UJlep853xi4lo8Xg',
+  supabaseTable: 'mindspring_quiz_results',
 };
+
+// ── LOCAL PERSISTENCE (admin data only — survives page reloads) ──
+function loadAdminLocal(){
+  try{
+    const raw = localStorage.getItem('mindspring_admin_v1');
+    if(!raw) return;
+    const saved = JSON.parse(raw);
+    if(saved.participantLog) state.participantLog = saved.participantLog;
+    if(saved.adminPin) state.adminPin = saved.adminPin;
+    if(saved.supabaseUrl) state.supabaseUrl = saved.supabaseUrl;
+    if(saved.supabaseKey) state.supabaseKey = saved.supabaseKey;
+    if(saved.supabaseTable) state.supabaseTable = saved.supabaseTable;
+    if(typeof saved.sessionCaptureMode === 'boolean') state.sessionCaptureMode = saved.sessionCaptureMode;
+    if(saved.capturePhase) state.capturePhase = saved.capturePhase;
+  }catch(e){ /* localStorage unavailable — fail silently, stay in-memory only */ }
+}
+function saveAdminLocal(){
+  try{
+    localStorage.setItem('mindspring_admin_v1', JSON.stringify({
+      participantLog: state.participantLog,
+      adminPin: state.adminPin,
+      supabaseUrl: state.supabaseUrl,
+      supabaseKey: state.supabaseKey,
+      supabaseTable: state.supabaseTable,
+      sessionCaptureMode: state.sessionCaptureMode,
+      capturePhase: state.capturePhase,
+    }));
+  }catch(e){ /* storage full or blocked — data still works in-memory this session */ }
+}
 
 const FAMILY_LABELS = {
   myself:'Myself', parent:'My Parent', spouse:'My Spouse', patient:'My Patient'
@@ -548,6 +632,7 @@ function render(){
     case 'satisfaction': return renderSatisfaction(el);
     case 'research':   return renderResearch(el);
     case 'passport':   return renderPassport(el);
+    case 'admin':      return renderAdmin(el);
   }
 }
 
@@ -1157,6 +1242,14 @@ function renderMore(el){
           <div class="more-arrow">▶</div>
         </div>
       </div>
+      <div class="card" style="margin-bottom:16px;cursor:pointer;display:flex;align-items:center;gap:12px;" onclick="openAdminPin()">
+        <div style="font-size:22px;">🔐</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;color:var(--ink);font-size:13.5px;">Admin Portal</div>
+          <div style="font-size:11.5px;color:var(--slate);">PIN-protected — live event data capture & export</div>
+        </div>
+        <div style="color:var(--slate);font-size:16px;">▶</div>
+      </div>
       <div class="card" style="background:#FDEAEA;border:1.5px solid var(--red);margin-bottom:16px;">
         <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px;">⚕️ IMPORTANT: NOT A DIAGNOSTIC TOOL</div>
         <div style="font-size:12.5px;color:var(--ink);line-height:1.7;">MindSpring is an educational and cognitive engagement tool. It does not diagnose dementia or replace professional medical assessment. Users with concerning symptoms are advised to seek evaluation from a qualified healthcare professional.</div>
@@ -1416,7 +1509,16 @@ function renderQuiz(el){
           ${quizState.score>=4?'Excellent knowledge! 🎉':quizState.score>=3?'Good job — review a few topics to sharpen up.':'Keep learning — revisit the Dementia Education topics.'}
           ${state.quizHistory.length ? `<br>Change since first attempt: ${improvement>=0?'+':''}${improvement}` : ''}
         </div>
-        <button class="btn full" onclick="startQuizAgain()">Retake Quiz</button>
+        ${state.sessionCaptureMode ? `
+          <div class="capture-prompt" style="text-align:left;">
+            <div style="font-weight:800;color:var(--teal);font-size:13px;margin-bottom:2px;">📋 Event mode is on</div>
+            <div style="font-size:11.5px;color:var(--slate);margin-bottom:8px;">Saving as: <b>${state.capturePhase.toUpperCase()}</b>-session score. Enter your participant code to log this result for the facilitator.</div>
+            <input type="text" id="captureCode" class="capture-input" placeholder="Participant code (e.g. A01)" />
+            <button class="btn full" onclick="saveQuizToLog()">Save to Event Log</button>
+            <div id="captureSaved" style="display:none;color:var(--green);font-size:12px;font-weight:700;text-align:center;margin-top:8px;">✅ Saved!</div>
+          </div>
+        ` : ''}
+        <button class="btn full" style="margin-top:14px;" onclick="startQuizAgain()">Retake Quiz</button>
         <button class="btn outline full" style="margin-top:10px;" onclick="navigate('education')">Back to Learn</button>
       </div>`;
     return;
@@ -1692,7 +1794,230 @@ window.ackDisclaimer = () => {
   if(modal) modal.style.display = 'none';
 };
 
+window.saveQuizToLog = () => {
+  const codeInput = document.getElementById('captureCode');
+  const code = (codeInput.value || '').trim();
+  if(!code){ codeInput.focus(); return; }
+  state.participantLog.push({
+    code, phase: state.capturePhase, score: quizState.score, maxScore: 5,
+    ts: new Date().toISOString(), deviceSessionId: state.sessionId, synced: false,
+  });
+  saveAdminLocal();
+  const saved = document.getElementById('captureSaved');
+  if(saved) saved.style.display = 'block';
+  codeInput.value = '';
+  codeInput.disabled = true;
+};
+
+// ── ADMIN PORTAL ──────────────────────────────────────────────────
+window.openAdminPin = () => {
+  const modal = document.getElementById('adminPinModal');
+  modal.style.display = 'flex';
+  document.getElementById('adminPinInput').value = '';
+  document.getElementById('adminPinError').style.display = 'none';
+  setTimeout(()=>{ const i=document.getElementById('adminPinInput'); if(i) i.focus(); }, 50);
+};
+window.closeAdminPin = () => {
+  document.getElementById('adminPinModal').style.display = 'none';
+};
+window.submitAdminPin = () => {
+  const val = document.getElementById('adminPinInput').value;
+  if(val === state.adminPin){
+    closeAdminPin();
+    openSub('admin', 'More');
+  } else {
+    document.getElementById('adminPinError').style.display = 'block';
+  }
+};
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderAdmin(el){
+  const log = state.participantLog;
+  const preScores = log.filter(r=>r.phase==='pre').map(r=>r.score);
+  const postScores = log.filter(r=>r.phase==='post').map(r=>r.score);
+  const avg = arr => arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1) : '—';
+  const codes = new Set(log.map(r=>r.code));
+
+  el.innerHTML = `
+    <div class="admin-body">
+      <div class="section-title">🔐 Admin Portal</div>
+      <div class="section-sub">Live-event data capture, export & sync</div>
+
+      <div class="card">
+        <div class="admin-toggle-row">
+          <div>
+            <div style="font-weight:700;color:var(--ink);font-size:13.5px;">Event Capture Mode</div>
+            <div style="font-size:11px;color:var(--slate);">Show the save-to-log prompt after each quiz</div>
+          </div>
+          <div class="switch${state.sessionCaptureMode?' on':''}" onclick="toggleCaptureMode()"></div>
+        </div>
+        ${state.sessionCaptureMode ? `
+          <div style="margin-top:10px;">
+            <div style="font-size:11.5px;color:var(--slate);margin-bottom:6px;">Currently collecting:</div>
+            <div class="phase-pill">
+              <button class="phase-btn${state.capturePhase==='pre'?' active':''}" onclick="setCapturePhase('pre')">PRE</button>
+              <button class="phase-btn${state.capturePhase==='post'?' active':''}" onclick="setCapturePhase('post')">POST</button>
+            </div>
+          </div>
+        ` : ''}
+      </div>
+
+      <div class="admin-stat-row">
+        <div class="admin-stat"><div class="admin-stat-val">${codes.size}</div><div class="admin-stat-lbl">Participants</div></div>
+        <div class="admin-stat"><div class="admin-stat-val">${avg(preScores)}</div><div class="admin-stat-lbl">Avg Pre (/5)</div></div>
+        <div class="admin-stat"><div class="admin-stat-val">${avg(postScores)}</div><div class="admin-stat-lbl">Avg Post (/5)</div></div>
+      </div>
+
+      <div class="card" style="padding:0;overflow-x:auto;">
+        ${log.length ? `
+          <table class="log-table">
+            <thead><tr><th>Code</th><th>Phase</th><th>Score</th><th>Time</th></tr></thead>
+            <tbody>
+              ${log.slice().reverse().map(r=>`
+                <tr>
+                  <td>${escapeHtml(r.code)}</td>
+                  <td>${r.phase.toUpperCase()}</td>
+                  <td>${r.score}/${r.maxScore}</td>
+                  <td>${new Date(r.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        ` : `<div style="padding:20px;text-align:center;font-size:12.5px;color:var(--slate);">No records yet. Turn on Event Capture Mode above, then have participants take the quiz.</div>`}
+      </div>
+
+      <button class="btn full" style="margin-top:14px;" onclick="exportLogCsv()">⬇ Download CSV (${log.length} rows)</button>
+
+      <div style="font-size:13px;font-weight:700;color:var(--ink);margin:20px 0 8px;">☁️ Supabase Sync (optional)</div>
+      <div class="card">
+        <div style="font-size:11.5px;color:var(--slate);margin-bottom:10px;">Paste your Supabase project URL and anon public API key once — this device remembers them. Requires a table with an insert-allowed policy for the anon role (see chat for the schema).</div>
+        <input type="text" id="sbUrl" class="capture-input" placeholder="https://xxxx.supabase.co" value="${escapeHtml(state.supabaseUrl)}" />
+        <input type="text" id="sbKey" class="capture-input" placeholder="anon public API key" value="${escapeHtml(state.supabaseKey)}" />
+        <input type="text" id="sbTable" class="capture-input" placeholder="Table name" value="${escapeHtml(state.supabaseTable)}" />
+        <button class="btn outline full" onclick="saveSupabaseConfig()">Save Settings</button>
+        <button class="btn full" style="margin-top:8px;" onclick="syncToSupabase()">Sync Unsynced Rows to Supabase</button>
+        <div id="sbStatus" style="font-size:12px;margin-top:8px;text-align:center;"></div>
+      </div>
+
+      <div style="font-size:13px;font-weight:700;color:var(--ink);margin:20px 0 8px;">⚙️ Settings</div>
+      <div class="card">
+        <div style="font-size:11.5px;color:var(--slate);margin-bottom:8px;">Change admin PIN</div>
+        <input type="text" id="newPin" class="capture-input" placeholder="New PIN" />
+        <button class="btn outline full" onclick="changeAdminPin()">Update PIN</button>
+        <button class="btn full" style="margin-top:14px;background:var(--red);" onclick="clearAdminLog()">🗑 Clear All Log Data</button>
+      </div>
+
+      <div class="card" style="background:#FDEAEA;border:1.5px solid var(--red);margin-top:16px;">
+        <div style="font-size:11px;color:var(--ink);line-height:1.7;">⚠️ This PIN is a light deterrent for a community screening tool, not strong security — it's checked in the browser, not on a server. Don't use it to protect anything more sensitive than anonymised participant codes and quiz scores.</div>
+      </div>
+      <div style="height:16px;"></div>
+    </div>`;
+}
+
+window.toggleCaptureMode = () => {
+  state.sessionCaptureMode = !state.sessionCaptureMode;
+  saveAdminLocal();
+  renderAdmin(document.getElementById('content'));
+};
+window.setCapturePhase = (phase) => {
+  state.capturePhase = phase;
+  saveAdminLocal();
+  renderAdmin(document.getElementById('content'));
+};
+
+window.exportLogCsv = () => {
+  const rows = [['code','phase','score','max_score','timestamp','device_session_id']];
+  state.participantLog.forEach(r => rows.push([r.code, r.phase, r.score, r.maxScore, r.ts, r.deviceSessionId]));
+  const csv = rows.map(row => row.map(cell => {
+    const s = String(cell === undefined || cell === null ? '' : cell);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+  }).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mindspring-event-log-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+window.saveSupabaseConfig = () => {
+  state.supabaseUrl = document.getElementById('sbUrl').value.trim().replace(/\/$/,'');
+  state.supabaseKey = document.getElementById('sbKey').value.trim();
+  state.supabaseTable = document.getElementById('sbTable').value.trim() || 'mindspring_quiz_results';
+  saveAdminLocal();
+  const status = document.getElementById('sbStatus');
+  status.style.color = 'var(--green)';
+  status.textContent = 'Settings saved on this device.';
+};
+
+window.syncToSupabase = async () => {
+  const status = document.getElementById('sbStatus');
+  if(!state.supabaseUrl || !state.supabaseKey){
+    status.style.color = 'var(--red)';
+    status.textContent = 'Add your Supabase URL and key first, then Save Settings.';
+    return;
+  }
+  const unsynced = state.participantLog.filter(r => !r.synced);
+  if(!unsynced.length){
+    status.style.color = 'var(--slate)';
+    status.textContent = 'Nothing to sync — all rows already synced.';
+    return;
+  }
+  status.style.color = 'var(--slate)';
+  status.textContent = `Syncing ${unsynced.length} row(s)…`;
+  try{
+    const payload = unsynced.map(r => ({
+      participant_code: r.code, phase: r.phase, score: r.score, max_score: r.maxScore,
+      recorded_at: r.ts, device_session_id: r.deviceSessionId,
+    }));
+    const res = await fetch(`${state.supabaseUrl}/rest/v1/${state.supabaseTable}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': state.supabaseKey,
+        'Authorization': `Bearer ${state.supabaseKey}`,
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify(payload),
+    });
+    if(!res.ok){
+      const text = await res.text();
+      throw new Error(`${res.status}: ${text.slice(0,200)}`);
+    }
+    unsynced.forEach(r => r.synced = true);
+    saveAdminLocal();
+    status.style.color = 'var(--green)';
+    status.textContent = `✅ Synced ${unsynced.length} row(s) to Supabase.`;
+    renderAdmin(document.getElementById('content'));
+  }catch(e){
+    status.style.color = 'var(--red)';
+    status.textContent = `Sync failed: ${e.message}`;
+  }
+};
+
+window.changeAdminPin = () => {
+  const val = document.getElementById('newPin').value.trim();
+  if(!val || val.length < 4){ alert('PIN must be at least 4 characters.'); return; }
+  state.adminPin = val;
+  saveAdminLocal();
+  alert('PIN updated.');
+  renderAdmin(document.getElementById('content'));
+};
+
+window.clearAdminLog = () => {
+  if(!confirm('This permanently deletes all captured participant records on this device. Continue?')) return;
+  state.participantLog = [];
+  saveAdminLocal();
+  renderAdmin(document.getElementById('content'));
+};
+
 // ── Init ──────────────────────────────────────────────────────────
+loadAdminLocal();
 applyAccessibility();
 navigate('home');
 if(state.disclaimerAcked){
