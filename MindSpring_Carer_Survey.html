@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>MindSpring — Carer Knowledge & Confidence Survey</title>
+<style>
+  :root{
+    --teal:#0F6E6E; --teal-dark:#0A4F4F; --teal-bg:#E3F2F0;
+    --amber:#C97A1F; --amber-bg:#FCE9C7;
+    --red:#B00000; --green:#0E6B36;
+    --ink:#1A2B2B; --slate:#5A6B6B; --mist:#F4F8F7; --line:#E1E9E7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--mist); color:var(--ink);
+  }
+  .wrap{max-width:600px; margin:0 auto; padding-bottom:60px;}
+  .hero{
+    background:var(--teal); color:#fff; padding:28px 20px 24px;
+    border-radius:0 0 24px 24px;
+  }
+  .hero-eyebrow{font-size:11px; font-weight:700; letter-spacing:.5px; color:#CFE8E4;}
+  .hero-title{font-size:24px; font-weight:800; margin:4px 0 2px;}
+  .hero-sub{font-size:12.5px; color:#CFE8E4; font-style:italic;}
+  .section{padding:18px 18px 4px;}
+  .card{
+    background:#fff; border-radius:14px; padding:16px; margin-bottom:16px;
+    box-shadow:0 2px 10px rgba(0,0,0,.05);
+  }
+  .card.highlight{background:var(--teal-bg); border:1.5px solid var(--teal);}
+  .section-title{font-size:16px; font-weight:800; color:var(--ink); margin:0 0 4px;}
+  .section-sub{font-size:12px; color:var(--slate); margin:0 0 12px;}
+  label.field-label{display:block; font-size:13px; font-weight:700; color:var(--ink); margin-bottom:6px;}
+  input[type=text], input[type=number], select, textarea{
+    width:100%; border:1.5px solid var(--line); border-radius:8px; padding:10px 12px;
+    font-size:14px; font-family:inherit; margin-bottom:14px; background:#fff;
+  }
+  textarea{min-height:70px; resize:vertical;}
+  .q-block{margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--mist);}
+  .q-block:last-child{border-bottom:none; margin-bottom:0; padding-bottom:0;}
+  .q-text{font-size:13.5px; font-weight:700; color:var(--ink); margin-bottom:8px;}
+  .opt-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .opt-chip{
+    flex:1; min-width:70px; text-align:center; padding:9px 6px; border-radius:8px;
+    background:var(--mist); border:1.5px solid transparent; font-size:12.5px; font-weight:600;
+    color:var(--ink); cursor:pointer; user-select:none;
+  }
+  .opt-chip input{position:absolute; opacity:0; pointer-events:none;}
+  .opt-chip.checked{background:var(--teal); color:#fff; border-color:var(--teal);}
+  .scale-row{display:flex; gap:6px;}
+  .scale-chip{
+    flex:1; text-align:center; padding:10px 0; border-radius:8px; background:var(--mist);
+    border:1.5px solid transparent; font-size:13px; font-weight:700; color:var(--slate); cursor:pointer;
+  }
+  .scale-chip.checked{background:var(--teal); color:#fff; border-color:var(--teal);}
+  .scale-chip input{position:absolute; opacity:0; pointer-events:none;}
+  .scale-caption{display:flex; justify-content:space-between; font-size:9.5px; color:var(--slate); margin-top:4px;}
+  .star-row{display:flex; gap:4px;}
+  .star{font-size:26px; cursor:pointer; color:#D8DFDF;}
+  .star.on{color:var(--amber);}
+  .btn{
+    display:block; width:100%; padding:14px; border:none; border-radius:26px;
+    background:var(--teal); color:#fff; font-size:15px; font-weight:700; cursor:pointer;
+    font-family:inherit;
+  }
+  .btn:disabled{background:#B7C6C4; cursor:not-allowed;}
+  .btn.outline{background:#fff; color:var(--teal); border:1.5px solid var(--teal);}
+  .hidden{display:none !important;}
+  .phase-pill{display:inline-flex; border-radius:20px; background:var(--mist); padding:3px; gap:2px; margin-top:8px;}
+  .phase-btn{border:none; background:transparent; padding:10px 22px; border-radius:18px; font-size:13px; font-weight:700; color:var(--slate); cursor:pointer; font-family:inherit;}
+  .phase-btn.active{background:var(--teal); color:#fff;}
+  .banner-red{background:#FDEAEA; border:1.5px solid var(--red); border-radius:12px; padding:14px; margin-bottom:16px; font-size:12px; color:var(--ink); line-height:1.7;}
+  .status-msg{text-align:center; font-size:13px; margin-top:10px; min-height:18px;}
+  .footer-note{text-align:center; font-size:10.5px; color:var(--slate); padding:14px 20px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="hero-eyebrow">BRAIN HEALTH ACADEMY AFRICA · MINDSPRING</div>
+    <div class="hero-title">Carer Knowledge & Confidence Survey</div>
+    <div class="hero-sub">Track A — Learning in Action Project</div>
+  </div>
+
+  <div class="section">
+
+    <div class="card highlight">
+      <div class="section-title">Before you start</div>
+      <div class="section-sub">Takes about 10–15 minutes. Your answers are anonymous and used only for this pilot evaluation.</div>
+      <label class="field-label">Participant Code</label>
+      <input type="text" id="pCode" placeholder="e.g. A01 — given by your facilitator" />
+      <label class="field-label">Which survey is this?</label>
+      <div class="phase-pill">
+        <button type="button" class="phase-btn active" id="phasePreBtn" onclick="setPhase('pre')">Baseline (PRE)</button>
+        <button type="button" class="phase-btn" id="phasePostBtn" onclick="setPhase('post')">Follow-up (POST)</button>
+      </div>
+      <label style="display:flex;align-items:flex-start;gap:8px;margin-top:16px;font-size:12px;color:var(--slate);">
+        <input type="checkbox" id="consent" style="margin-top:2px;" />
+        I understand participation is voluntary, my responses are confidential and anonymised, and I may withdraw at any time.
+      </label>
+    </div>
+
+    <!-- SECTION A: Demographics (PRE only) -->
+    <div id="sectionDemo" class="card">
+      <div class="section-title">Section A — About You</div>
+      <label class="field-label">Age</label>
+      <input type="number" id="dAge" min="18" max="110" />
+      <label class="field-label">Sex</label>
+      <div id="dSex" class="opt-row" data-name="d_sex"></div>
+      <div style="height:14px;"></div>
+      <label class="field-label">Occupation</label>
+      <input type="text" id="dOccupation" />
+      <label class="field-label">Highest level of education</label>
+      <select id="dEducation">
+        <option value="">Select…</option>
+        <option>No formal education</option>
+        <option>Primary</option>
+        <option>Secondary</option>
+        <option>Tertiary</option>
+        <option>Postgraduate</option>
+      </select>
+      <label class="field-label">Have you ever cared for someone with dementia?</label>
+      <div id="dCared" class="opt-row" data-name="d_cared"></div>
+      <div style="height:14px;"></div>
+      <label class="field-label">Have you ever received dementia education or training before?</label>
+      <div id="dEducated" class="opt-row" data-name="d_educated"></div>
+    </div>
+
+    <!-- SECTION B: Knowledge -->
+    <div class="card">
+      <div class="section-title">Section B — Dementia Knowledge</div>
+      <div class="section-sub">Answer Yes / No / I don't know for each item.</div>
+      <div id="knowledgeItems"></div>
+      <div class="q-block">
+        <div class="q-text">21. The symptoms above form part of a medical condition. What would you call this medical condition?</div>
+        <input type="text" id="kOpen" placeholder="Your answer" />
+      </div>
+    </div>
+
+    <!-- SECTION B2: Attitudes -->
+    <div class="card">
+      <div class="section-title">Section B2 — Dementia Attitudes</div>
+      <div class="section-sub">Answer Yes / No / I don't know for each item.</div>
+      <div id="attitudeItems"></div>
+    </div>
+
+    <!-- SECTION D: Confidence -->
+    <div class="card">
+      <div class="section-title">Section D — Confidence</div>
+      <div class="section-sub">Rate from 1 (Strongly disagree) to 5 (Strongly agree).</div>
+      <div id="confidenceItems"></div>
+    </div>
+
+    <!-- SECTION E: Engagement (POST only) -->
+    <div id="sectionEngagement" class="card">
+      <div class="section-title">Section E — App Engagement & Perceived Impact</div>
+      <div class="section-sub">Rate from 1 (Strongly disagree) to 5 (Strongly agree).</div>
+      <div id="engagementItems"></div>
+    </div>
+
+    <!-- SECTION F: Usability (POST only) -->
+    <div id="sectionUsability" class="card">
+      <div class="section-title">Section F — Usability</div>
+      <div class="section-sub">Rate from 1 (Strongly disagree) to 5 (Strongly agree).</div>
+      <div id="usabilityItems"></div>
+    </div>
+
+    <!-- SECTION G: Satisfaction (POST only) -->
+    <div id="sectionSatisfaction" class="card">
+      <div class="section-title">Section G — App Quality & Satisfaction</div>
+      <div class="section-sub">Rate each area from 1 to 5 stars.</div>
+      <div id="satisfactionItems"></div>
+    </div>
+
+    <!-- SECTION H: Open-ended (POST only) -->
+    <div id="sectionOpen" class="card">
+      <div class="section-title">Section H — Your Feedback</div>
+      <label class="field-label">What feature did you like most?</label>
+      <textarea id="oLiked"></textarea>
+      <label class="field-label">What should be improved?</label>
+      <textarea id="oImprove"></textarea>
+      <label class="field-label">Would you recommend this app?</label>
+      <div id="oRecommend" class="opt-row" data-name="o_recommend"></div>
+      <div style="height:14px;"></div>
+      <label class="field-label">Any additional comments?</label>
+      <textarea id="oComments"></textarea>
+    </div>
+
+    <div id="formError" class="banner-red hidden"></div>
+
+    <button class="btn" id="submitBtn" onclick="submitSurvey()">Submit Survey</button>
+    <div id="statusMsg" class="status-msg"></div>
+
+  </div>
+
+  <div class="footer-note">
+    MindSpring is an educational and cognitive engagement tool. It does not diagnose dementia or replace professional medical assessment.
+  </div>
+</div>
+
+<script>
+// ── Supabase connection (anon public key — safe for client-side use) ──
+const SUPABASE_URL = 'https://xxyncvigdhegrqekyfee.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4eW5jdmlnZGhlZ3JxZWt5ZmVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMTU2OTIsImV4cCI6MjEwMTU5MTY5Mn0.x1BgyfSUa5ZsTnp0uZcXHKvnu51UJlep853xi4lo8Xg';
+const SUPABASE_TABLE = 'mindspring_questionnaire_responses';
+
+let phase = 'pre';
+
+const KNOWLEDGE_ITEMS = [
+  'Does memory loss happen to all people as they get older?',
+  'Is forgetting who your family members are a normal part of getting old?',
+  'Is forgetting the names of objects a normal part of getting old?',
+  'Is having trouble with speaking or understanding a normal part of getting old?',
+  'Do you think dementia is normal?',
+  'Do you think dementia is contagious?',
+  'Do you think poverty can cause dementia?',
+  'Do you think a brain disease can be the cause of dementia?',
+  'Do you think dementia is a punishment from God?',
+  'Do you think dementia is a punishment from ancestors?',
+  'Do you think dementia can run in families?',
+  'Do you think a traumatic event or shock can result in dementia?',
+  'Do you think stress in daily life can cause dementia?',
+  'Do you think dementia is only a disease that affects older people?',
+  'Do you think women are more likely to get dementia than men?',
+  'Do you think there is a cure for dementia?',
+  'Do you think people with dementia have mental and physical problems?',
+  'Do you think people with dementia are mad?',
+  'Do you think traditional healers can heal people with dementia?',
+  'Do you believe dementia is a curse or witchcraft?',
+];
+
+const ATTITUDE_ITEMS = [
+  'Would you share your house with a family member who had dementia?',
+  'Do you believe that people with dementia are responsible for their problem?',
+  'Do you see people with dementia as violent and dangerous people to be avoided?',
+  'Would you feel ashamed if people knew someone in your family has dementia?',
+  'Would you be afraid to have a conversation with someone who has dementia?',
+  'Would you be scared having someone with dementia as a neighbour?',
+  'Do you think people with dementia can live in the community?',
+  'Do you think people with dementia should live in a nursing home?',
+];
+
+const CONFIDENCE_ITEMS = [
+  'I understand what dementia is.',
+  'I can recognise early warning signs of dementia.',
+  'I know how to reduce dementia risk.',
+  'I feel confident discussing dementia with others.',
+  'I know how to support someone living with dementia.',
+];
+
+const ENGAGEMENT_ITEMS = [
+  'The app was easy to use.',
+  'The games were enjoyable.',
+  'I learned new information from the app.',
+  'I would recommend this app to others.',
+  'I would continue using this app.',
+  'The app motivated me to adopt healthier habits.',
+];
+
+const USABILITY_ITEMS = [
+  'I think I would like to use this app frequently.',
+  'I found the app unnecessarily complex.',
+  'I thought the app was easy to use.',
+  'I would need support from another person to use this app.',
+  'I found the different features of the app well integrated.',
+  'I thought there was too much inconsistency in the app.',
+  'Most people would learn to use this app very quickly.',
+  'I found the app very cumbersome/awkward to use.',
+  'I felt very confident using the app.',
+  'I needed to learn a lot before I could get going with the app.',
+];
+
+const SATISFACTION_ITEMS = [
+  'Appearance of the app',
+  'Ease of navigation',
+  'Educational content',
+  'Memory games',
+  'Overall experience',
+];
+
+function yesNoDkRow(name, idx){
+  return `
+    <div class="opt-row" data-name="${name}">
+      <label class="opt-chip"><input type="radio" name="${name}" value="Yes"/>Yes</label>
+      <label class="opt-chip"><input type="radio" name="${name}" value="No"/>No</label>
+      <label class="opt-chip"><input type="radio" name="${name}" value="Don't know"/>Don't know</label>
+    </div>`;
+}
+
+function scaleRow(name){
+  return `
+    <div class="scale-row" data-name="${name}">
+      ${[1,2,3,4,5].map(n=>`<label class="scale-chip"><input type="radio" name="${name}" value="${n}"/>${n}</label>`).join('')}
+    </div>
+    <div class="scale-caption"><span>Strongly disagree</span><span>Strongly agree</span></div>`;
+}
+
+function starRow(name){
+  return `<div class="star-row" data-name="${name}">
+    ${[1,2,3,4,5].map(n=>`<span class="star" data-val="${n}" onclick="setStar('${name}',${n})">★</span>`).join('')}
+  </div>`;
+}
+
+function renderYesNoBlock(containerId, items, prefix){
+  const el = document.getElementById(containerId);
+  el.innerHTML = items.map((text,i)=>`
+    <div class="q-block">
+      <div class="q-text">${i+1}. ${text}</div>
+      ${yesNoDkRow(prefix+(i+1), i)}
+    </div>`).join('');
+}
+
+function renderScaleBlock(containerId, items, prefix){
+  const el = document.getElementById(containerId);
+  el.innerHTML = items.map((text,i)=>`
+    <div class="q-block">
+      <div class="q-text">${i+1}. ${text}</div>
+      ${scaleRow(prefix+(i+1))}
+    </div>`).join('');
+}
+
+function renderStarBlock(containerId, items, prefix){
+  const el = document.getElementById(containerId);
+  el.innerHTML = items.map((text,i)=>`
+    <div class="q-block">
+      <div class="q-text">${text}</div>
+      ${starRow(prefix+(i+1))}
+    </div>`).join('');
+}
+
+// Build all question blocks
+renderYesNoBlock('knowledgeItems', KNOWLEDGE_ITEMS, 'k');
+renderYesNoBlock('attitudeItems', ATTITUDE_ITEMS, 'a');
+renderScaleBlock('confidenceItems', CONFIDENCE_ITEMS, 'c');
+renderScaleBlock('engagementItems', ENGAGEMENT_ITEMS, 'e');
+renderScaleBlock('usabilityItems', USABILITY_ITEMS, 'u');
+renderStarBlock('satisfactionItems', SATISFACTION_ITEMS, 's');
+
+// Simple opt-row builders for single-row demographic choices
+function buildOptRow(containerId, name, options){
+  const el = document.getElementById(containerId);
+  el.setAttribute('data-name', name);
+  el.innerHTML = options.map(opt=>`<label class="opt-chip"><input type="radio" name="${name}" value="${opt}"/>${opt}</label>`).join('');
+}
+buildOptRow('dSex', 'd_sex', ['Male','Female']);
+buildOptRow('dCared', 'd_cared', ['Yes','No']);
+buildOptRow('dEducated', 'd_educated', ['Yes','No']);
+buildOptRow('oRecommend', 'o_recommend', ['Yes','No']);
+
+// Chip / scale visual state on click (event delegation)
+document.addEventListener('change', (e) => {
+  if(e.target.type === 'radio'){
+    const name = e.target.name;
+    document.querySelectorAll(`[name="${name}"]`).forEach(inp => {
+      const chip = inp.closest('.opt-chip') || inp.closest('.scale-chip');
+      if(chip) chip.classList.toggle('checked', inp.checked);
+    });
+  }
+});
+
+const starValues = {};
+function setStar(name, val){
+  starValues[name] = val;
+  document.querySelectorAll(`.star-row[data-name="${name}"] .star`).forEach(s=>{
+    s.classList.toggle('on', parseInt(s.dataset.val) <= val);
+  });
+}
+
+function setPhase(p){
+  phase = p;
+  document.getElementById('phasePreBtn').classList.toggle('active', p==='pre');
+  document.getElementById('phasePostBtn').classList.toggle('active', p==='post');
+  document.getElementById('sectionDemo').classList.toggle('hidden', p!=='pre');
+  document.getElementById('sectionEngagement').classList.toggle('hidden', p!=='post');
+  document.getElementById('sectionUsability').classList.toggle('hidden', p!=='post');
+  document.getElementById('sectionSatisfaction').classList.toggle('hidden', p!=='post');
+  document.getElementById('sectionOpen').classList.toggle('hidden', p!=='post');
+}
+setPhase('pre');
+
+function getRadioValue(name){
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : null;
+}
+
+function collectYesNo(prefix, count){
+  const out = {};
+  for(let i=1;i<=count;i++) out['q'+i] = getRadioValue(prefix+i);
+  return out;
+}
+function collectScale(prefix, count){
+  const out = {};
+  for(let i=1;i<=count;i++) out['q'+i] = getRadioValue(prefix+i);
+  return out;
+}
+function collectStars(prefix, count){
+  const out = {};
+  for(let i=1;i<=count;i++) out['q'+i] = starValues[prefix+i] || null;
+  return out;
+}
+
+async function submitSurvey(){
+  const errorBox = document.getElementById('formError');
+  errorBox.classList.add('hidden');
+  const code = document.getElementById('pCode').value.trim();
+  const consent = document.getElementById('consent').checked;
+
+  if(!code){ showError('Please enter a Participant Code.'); return; }
+  if(!consent){ showError('Please confirm the consent checkbox before submitting.'); return; }
+
+  const payload = {
+    participant_code: code,
+    phase: phase,
+    age: phase==='pre' ? (document.getElementById('dAge').value || null) : null,
+    sex: phase==='pre' ? getRadioValue('d_sex') : null,
+    occupation: phase==='pre' ? (document.getElementById('dOccupation').value || null) : null,
+    education: phase==='pre' ? (document.getElementById('dEducation').value || null) : null,
+    cared_for_someone: phase==='pre' ? getRadioValue('d_cared') : null,
+    received_education: phase==='pre' ? getRadioValue('d_educated') : null,
+    knowledge: collectYesNo('k', 20),
+    knowledge_condition_name: document.getElementById('kOpen').value.trim() || null,
+    attitudes: collectYesNo('a', 8),
+    confidence: collectScale('c', 5),
+    engagement: phase==='post' ? collectScale('e', 6) : null,
+    usability: phase==='post' ? collectScale('u', 10) : null,
+    satisfaction: phase==='post' ? collectStars('s', 5) : null,
+    liked_most: phase==='post' ? (document.getElementById('oLiked').value.trim() || null) : null,
+    improve: phase==='post' ? (document.getElementById('oImprove').value.trim() || null) : null,
+    would_recommend: phase==='post' ? getRadioValue('o_recommend') : null,
+    additional_comments: phase==='post' ? (document.getElementById('oComments').value.trim() || null) : null,
+  };
+
+  const btn = document.getElementById('submitBtn');
+  const status = document.getElementById('statusMsg');
+  btn.disabled = true;
+  status.style.color = 'var(--slate)';
+  status.textContent = 'Submitting…';
+
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify(payload),
+    });
+    if(!res.ok){
+      const text = await res.text();
+      throw new Error(`${res.status}: ${text.slice(0,200)}`);
+    }
+    status.style.color = 'var(--green)';
+    status.textContent = '✅ Thank you — your response has been recorded.';
+    document.querySelector('.section').innerHTML = `
+      <div class="card highlight" style="text-align:center;">
+        <div style="font-size:40px;">✅</div>
+        <div class="section-title">Thank you!</div>
+        <div class="section-sub">Your response has been recorded for participant code <b>${code}</b> (${phase.toUpperCase()}).</div>
+      </div>`;
+  }catch(e){
+    btn.disabled = false;
+    status.style.color = 'var(--red)';
+    status.textContent = '';
+    showError('Something went wrong submitting your response: ' + e.message + '. Please try again or tell your facilitator.');
+  }
+}
+
+function showError(msg){
+  const box = document.getElementById('formError');
+  box.textContent = '⚠️ ' + msg;
+  box.classList.remove('hidden');
+  box.scrollIntoView({behavior:'smooth', block:'center'});
+}
+</script>
+</body>
+</html>
